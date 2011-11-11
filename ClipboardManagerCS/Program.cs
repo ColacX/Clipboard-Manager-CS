@@ -19,11 +19,11 @@ namespace ClipboardManagerCS
 		{
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault( false );
-			Application.Run(new ClipboardManagerCS());
+			Application.Run(new MainForm());
 		}
 	}
 
-	class ClipboardManagerCS : Form
+	class MainForm : Form
 	{
 		private NotifyIcon notifyIcon;
 		private ContextMenuStrip contextMenuStrip;
@@ -31,7 +31,7 @@ namespace ClipboardManagerCS
 		private ToolStripMenuItem settingItem;
 		private List<ClipboardItem> listClipboardItem;
 		
-		public ClipboardManagerCS()
+		public MainForm()
 		{
 			contextMenuStrip = new ContextMenuStrip();
 
@@ -68,7 +68,7 @@ namespace ClipboardManagerCS
 
 		protected override void OnLoad( EventArgs e )
 		{
-			ClipboardManagerCS.keyListener = this;
+			MainForm.keyListener = this;
 			hookID = SetHook( hookCallback );
 			notifyIcon.Visible = true;
 			this.Visible = false;
@@ -110,18 +110,32 @@ namespace ClipboardManagerCS
 			var formats = dataObject.GetFormats();
 
 			foreach( var format in formats )
-				clipboardItem.Objects.Add( format, dataObject.GetData( format ) );
+			{
+				var data = dataObject.GetData( format );
+				clipboardItem.Objects.Add( format, data );
+			}
 
 			var menuItem = new ToolStripMenuItem();
+			clipboardItem.MenuItem = menuItem;
 			menuItem.Tag = clipboardItem;
 			menuItem.Click += menuItemClickHandler;
 			menuItem.Text = DateTime.Now.ToString();
 
+			//mark the current clipboard as checked
 			foreach( var ci in listClipboardItem )
 				ci.MenuItem.Checked = false;
 
 			menuItem.Checked = true;
-			clipboardItem.MenuItem = menuItem;
+
+			//determine mouse hover tooltip
+			menuItem.AutoToolTip = true;
+			menuItem.ToolTipText = (string)dataObject.GetData( "Text" );
+
+			if( menuItem.ToolTipText == null )
+			{
+				var data = ( string[] )dataObject.GetData( "FileName" );
+				menuItem.ToolTipText = string.Join( "\n", data );
+			}
 
 			return clipboardItem;
 		}
@@ -143,7 +157,7 @@ namespace ClipboardManagerCS
 		private static LowLevelKeyboardProc hookCallback = HookCallback;
 		private static IntPtr hookID = IntPtr.Zero;
 		private static bool[] keyPressedDown = new bool[256];
-		private static ClipboardManagerCS keyListener;
+		private static MainForm keyListener;
 		private static bool copyToggleDown = false;
 
 		private static IntPtr SetHook( LowLevelKeyboardProc proc )
