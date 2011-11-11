@@ -28,7 +28,6 @@ namespace ClipboardManagerCS
 		private NotifyIcon notifyIcon;
 		private ContextMenuStrip contextMenuStrip;
 		private ToolStripMenuItem exitItem;
-		private ToolStripMenuItem settingItem;
 		private List<ClipboardItem> listClipboardItem;
 		
 		public MainForm()
@@ -39,10 +38,6 @@ namespace ClipboardManagerCS
 			exitItem.Text = "Exit";
 			exitItem.Click += ( o, e ) => { CloseApplication(); };
 
-			settingItem = new ToolStripMenuItem();
-			settingItem.Text = "Setting";
-			settingItem.Click += ( o, e ) => { AddClipboardItem(); };
-			
 			notifyIcon = new NotifyIcon();
 			notifyIcon.Text = "Clipboard Manager CS";
 			notifyIcon.Icon = new Icon(Properties.Resources.Icon1, 40, 40);
@@ -56,7 +51,6 @@ namespace ClipboardManagerCS
 					contextMenuStrip.Items.Add( ci.MenuItem );
 
 				contextMenuStrip.Items.Add( "-" );
-				contextMenuStrip.Items.Add( settingItem );
 				contextMenuStrip.Items.Add( exitItem );
 
 				MethodInfo mi = typeof( NotifyIcon ).GetMethod( "ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic );
