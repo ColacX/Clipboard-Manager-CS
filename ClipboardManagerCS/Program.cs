@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Diagnostics;
@@ -85,18 +84,6 @@ namespace ClipboardManagerCS
 				listClipboardItem.RemoveAt( 0 );
 		}
 
-		private void menuItemClickHandler( Object sender, EventArgs args )
-		{
-			var menuItem = ( ToolStripMenuItem )sender;
-
-			foreach( var ci in listClipboardItem )
-				ci.MenuItem.Checked = false;
-
-			menuItem.Checked = true;
-			
-			SetClipboard( ( ClipboardItem )menuItem.Tag );
-		}
-
 		private ClipboardItem GetClipboard()
 		{
 			var clipboardItem = new ClipboardItem();
@@ -114,22 +101,23 @@ namespace ClipboardManagerCS
 			menuItem.Tag = clipboardItem;
 			menuItem.Click += menuItemClickHandler;
 			menuItem.Text = DateTime.Now.ToString();
-
+			
 			//mark the current clipboard as checked
 			foreach( var ci in listClipboardItem )
 				ci.MenuItem.Checked = false;
 
 			menuItem.Checked = true;
 
-			//determine mouse hover tooltip
-			menuItem.AutoToolTip = true;
-			menuItem.ToolTipText = (string)dataObject.GetData( "Text" );
+			//determine clipboard content text
+			var text = (string)dataObject.GetData( "Text" );
 
-			if( menuItem.ToolTipText == null )
+			if( text == null )
 			{
 				var data = ( string[] )dataObject.GetData( "FileName" );
-				menuItem.ToolTipText = string.Join( "\n", data );
+				text = string.Join( "\n", data );
 			}
+
+			menuItem.DropDown.Items.Add( text );
 
 			return clipboardItem;
 		}
@@ -142,6 +130,18 @@ namespace ClipboardManagerCS
 				dataObject.SetData( pair.Key, pair.Value );
 
 			Clipboard.SetDataObject( dataObject, true, 5, 100 );
+		}
+
+		private void menuItemClickHandler( Object sender, EventArgs args )
+		{
+			var menuItem = ( ToolStripMenuItem )sender;
+
+			foreach( var ci in listClipboardItem )
+				ci.MenuItem.Checked = false;
+
+			menuItem.Checked = true;
+
+			SetClipboard( ( ClipboardItem )menuItem.Tag );
 		}
 
 		private const int WH_KEYBOARD_LL = 13;
