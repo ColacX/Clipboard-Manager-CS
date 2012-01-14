@@ -27,11 +27,18 @@ namespace ClipboardManagerCS
 		private NotifyIcon notifyIcon;
 		private ContextMenuStrip contextMenuStrip;
 		private ToolStripMenuItem exitItem;
+		private ToolStripMenuItem clearItem;
 		private List<ClipboardItem> listClipboardItem;
 		
 		public MainForm()
 		{
+			listClipboardItem = new List<ClipboardItem>();
 			contextMenuStrip = new ContextMenuStrip();
+
+			clearItem = new ToolStripMenuItem();
+			clearItem.Text = "Auto Clear Formatting";
+			clearItem.Checked = true;
+			clearItem.Click += ( o, e ) => { clearItem.Checked = !clearItem.Checked; };
 
 			exitItem = new ToolStripMenuItem();
 			exitItem.Text = "Exit";
@@ -42,21 +49,28 @@ namespace ClipboardManagerCS
 			notifyIcon.Icon = new Icon(Properties.Resources.Icon1, 40, 40);
 			notifyIcon.ContextMenuStrip = contextMenuStrip;
 			
-			notifyIcon.Click += ( s, a ) => {
-				var args = ( MouseEventArgs )a;
-				contextMenuStrip.Items.Clear();
+			notifyIcon.Click += ( s, a ) => 
+			{
+				try
+				{
+					var args = ( MouseEventArgs )a;
+					contextMenuStrip.Items.Clear();
 
-				foreach( var ci in listClipboardItem )
-					contextMenuStrip.Items.Add( ci.MenuItem );
+					foreach( var ci in listClipboardItem )
+						contextMenuStrip.Items.Add( ci.MenuItem );
 
-				contextMenuStrip.Items.Add( "-" );
-				contextMenuStrip.Items.Add( exitItem );
+					contextMenuStrip.Items.Add( "-" );
+					contextMenuStrip.Items.Add( clearItem );
+					contextMenuStrip.Items.Add( exitItem );
 
-				MethodInfo mi = typeof( NotifyIcon ).GetMethod( "ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic );
-				mi.Invoke( notifyIcon, null );
+					MethodInfo mi = typeof( NotifyIcon ).GetMethod( "ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic );
+					mi.Invoke( notifyIcon, null );
+				}
+				catch( Exception ex )
+				{
+					Console.WriteLine( ex );
+				}
 			};
-
-			listClipboardItem = new List<ClipboardItem>();
 		}
 
 		protected override void OnLoad( EventArgs e )
@@ -82,6 +96,22 @@ namespace ClipboardManagerCS
 
 			if( listClipboardItem.Count > 10 )
 				listClipboardItem.RemoveAt( 0 );
+
+			AutoClearFormatting();
+		}
+
+		private void AutoClearFormatting()
+		{
+			if( !clearItem.Checked )
+				return;
+
+			var dataObject = Clipboard.GetDataObject();
+			Type format = typeof( string );
+
+			if( !dataObject.GetDataPresent( format ) )
+				return;
+
+			Clipboard.SetData( format.ToString(), dataObject.GetData( format ) );
 		}
 
 		private ClipboardItem GetClipboard()
