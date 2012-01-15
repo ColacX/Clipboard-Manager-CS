@@ -29,6 +29,7 @@ namespace ClipboardManagerCS
 		private ToolStripMenuItem exitItem;
 		private ToolStripMenuItem clearItem;
 		private List<ClipboardItem> listClipboardItem;
+		private ClipboardItem currentClipboardItem;
 		
 		public MainForm()
 		{
@@ -38,7 +39,11 @@ namespace ClipboardManagerCS
 			clearItem = new ToolStripMenuItem();
 			clearItem.Text = "Auto Clear Formatting";
 			clearItem.Checked = true;
-			clearItem.Click += ( o, e ) => { clearItem.Checked = !clearItem.Checked; };
+			clearItem.Click += ( o, e ) =>
+			{
+				clearItem.Checked = !clearItem.Checked;
+				SetClipboard( currentClipboardItem );
+			};
 
 			exitItem = new ToolStripMenuItem();
 			exitItem.Text = "Exit";
@@ -92,7 +97,8 @@ namespace ClipboardManagerCS
 
 		private void AddClipboardItem()
 		{
-			listClipboardItem.Add( GetClipboard() );
+			currentClipboardItem = GetClipboard();
+			listClipboardItem.Add( currentClipboardItem );
 
 			if( listClipboardItem.Count > 10 )
 				listClipboardItem.RemoveAt( 0 );
@@ -159,7 +165,8 @@ namespace ClipboardManagerCS
 			foreach( var pair in clipboardItem.Objects )
 				dataObject.SetData( pair.Key, pair.Value );
 
-			Clipboard.SetDataObject( dataObject, true, 5, 100 );
+			Clipboard.SetDataObject( dataObject, true, 5, 100 );			
+			AutoClearFormatting();
 		}
 
 		private void menuItemClickHandler( Object sender, EventArgs args )
@@ -171,7 +178,8 @@ namespace ClipboardManagerCS
 
 			menuItem.Checked = true;
 
-			SetClipboard( ( ClipboardItem )menuItem.Tag );
+			currentClipboardItem = ( ClipboardItem )menuItem.Tag;
+			SetClipboard( currentClipboardItem );
 		}
 
 		private const int WH_KEYBOARD_LL = 13;
