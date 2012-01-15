@@ -1,0 +1,2 @@
+2012-01-15 01:59:34 release 1.0.0.0
+added: release notes and releaseversion tooltip.

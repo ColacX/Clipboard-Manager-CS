@@ -24,6 +24,8 @@ namespace ClipboardManagerCS
 
 	class MainForm : Form
 	{
+		private const string releaseVersion = "1.0.0.0";
+
 		private NotifyIcon notifyIcon;
 		private ContextMenuStrip contextMenuStrip;
 		private ToolStripMenuItem exitItem;
@@ -50,7 +52,7 @@ namespace ClipboardManagerCS
 			exitItem.Click += ( o, e ) => { CloseApplication(); };
 
 			notifyIcon = new NotifyIcon();
-			notifyIcon.Text = "Clipboard Manager CS";
+			notifyIcon.Text = "ClipboardManagerCS " + releaseVersion;
 			notifyIcon.Icon = new Icon(Properties.Resources.Icon1, 40, 40);
 			notifyIcon.ContextMenuStrip = contextMenuStrip;
 			
