@@ -102,6 +102,7 @@ namespace ClipboardManagerCS
 			currentClipboardItem = GetClipboard();
 			listClipboardItem.Add( currentClipboardItem );
 
+			//remove last item if list is greater than maximum size
 			if( listClipboardItem.Count > 10 )
 				listClipboardItem.RemoveAt( 0 );
 
@@ -169,19 +170,38 @@ namespace ClipboardManagerCS
 
 			Clipboard.SetDataObject( dataObject, true, 5, 100 );			
 			AutoClearFormatting();
+
+			//uncheck all other items
+			foreach( var ci in listClipboardItem )
+				ci.MenuItem.Checked = false;
+
+			//check current item
+			clipboardItem.MenuItem.Checked = true;
+
+			currentClipboardItem = clipboardItem;
 		}
 
 		private void menuItemClickHandler( Object sender, EventArgs args )
 		{
 			var menuItem = ( ToolStripMenuItem )sender;
+			SetClipboard( ( ClipboardItem )menuItem.Tag );
+		}
 
-			foreach( var ci in listClipboardItem )
-				ci.MenuItem.Checked = false;
+		//get the item older than current item
+		public void BackClipboardItem()
+		{
+			//if there is no older item then do nothing
+			if( listClipboardItem.Count <= 1 )
+				return;
 
-			menuItem.Checked = true;
+			var backItem = currentClipboardItem;
 
-			currentClipboardItem = ( ClipboardItem )menuItem.Tag;
-			SetClipboard( currentClipboardItem );
+			//look from the oldest item in list
+			for( int i = 1; i < listClipboardItem.Count; i++ )
+			{
+				if( listClipboardItem[ i ] == currentClipboardItem )
+					SetClipboard( listClipboardItem[ i - 1 ] );
+			}
 		}
 
 		private const int WH_KEYBOARD_LL = 13;
@@ -193,6 +213,7 @@ namespace ClipboardManagerCS
 		private static bool[] keyPressedDown = new bool[256];
 		private static MainForm keyListener;
 		private static bool copyToggleDown = false;
+		private static bool backToggleDown = false;
 
 		private static IntPtr SetHook( LowLevelKeyboardProc proc )
 		{
@@ -220,12 +241,26 @@ namespace ClipboardManagerCS
 
 			if( !copyToggleDown && keyPressedDown[ 162 ] && keyPressedDown[ 67 ] )
 			{
+				//ctrl+c down
 				copyToggleDown = true;
 			}
 			else if( copyToggleDown && !keyPressedDown[ 162 ] && !keyPressedDown[ 67 ] )
 			{
+				//ctrl+c up
 				copyToggleDown = false;
 				keyListener.AddClipboardItem();
+			}
+
+			if( !backToggleDown && keyPressedDown[ 162 ] && keyPressedDown[ 66 ] )
+			{
+				//ctrl+b down
+				backToggleDown = true;
+			}
+			else if( backToggleDown && !keyPressedDown[ 162 ] && !keyPressedDown[ 66 ] )
+			{
+				//ctrl+b up
+				backToggleDown = false;
+				keyListener.BackClipboardItem();
 			}
 
 			return CallNextHookEx( hookID, nCode, wParam, lParam );
