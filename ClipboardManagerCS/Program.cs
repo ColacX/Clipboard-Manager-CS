@@ -17,7 +17,7 @@ namespace ClipboardManagerCS
 		static void Main()
 		{
 			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault( false );
+			Application.SetCompatibleTextRenderingDefault(false);
 			Application.Run(new MainForm());
 		}
 	}
@@ -33,7 +33,7 @@ namespace ClipboardManagerCS
 		private ToolStripMenuItem ignoreShiftDelItem;
 		private List<ClipboardItem> listClipboardItem;
 		private ClipboardItem currentClipboardItem;
-		
+
 		public MainForm()
 		{
 			listClipboardItem = new List<ClipboardItem>();
@@ -42,10 +42,10 @@ namespace ClipboardManagerCS
 			clearItem = new ToolStripMenuItem();
 			clearItem.Text = "Auto Clear Formatting";
 			clearItem.Checked = true;
-			clearItem.Click += ( o, e ) =>
+			clearItem.Click += (o, e) =>
 			{
 				clearItem.Checked = !clearItem.Checked;
-				SetClipboard( currentClipboardItem );
+				SetClipboard(currentClipboardItem);
 			};
 
 			ignoreShiftDelItem = new ToolStripMenuItem();
@@ -58,79 +58,79 @@ namespace ClipboardManagerCS
 
 			exitItem = new ToolStripMenuItem();
 			exitItem.Text = "Exit";
-			exitItem.Click += ( o, e ) => { CloseApplication(); };
+			exitItem.Click += (o, e) => { CloseApplication(); };
 
 			notifyIcon = new NotifyIcon();
 			notifyIcon.Text = "ClipboardManagerCS " + releaseVersion;
 			notifyIcon.Icon = new Icon(Properties.Resources.Icon1, 40, 40);
 			notifyIcon.ContextMenuStrip = contextMenuStrip;
-			
-			notifyIcon.Click += ( s, a ) => 
+
+			notifyIcon.Click += (s, a) =>
 			{
 				try
 				{
-					var args = ( MouseEventArgs )a;
+					var args = (MouseEventArgs)a;
 					contextMenuStrip.Items.Clear();
 
-					foreach( var ci in listClipboardItem )
-						contextMenuStrip.Items.Add( ci.MenuItem );
+					foreach(var ci in listClipboardItem)
+						contextMenuStrip.Items.Add(ci.MenuItem);
 
-					contextMenuStrip.Items.Add( "-" );
-					contextMenuStrip.Items.Add( clearItem );
+					contextMenuStrip.Items.Add("-");
+					contextMenuStrip.Items.Add(clearItem);
 					contextMenuStrip.Items.Add(ignoreShiftDelItem);
-					contextMenuStrip.Items.Add( exitItem );
+					contextMenuStrip.Items.Add(exitItem);
 
-					MethodInfo mi = typeof( NotifyIcon ).GetMethod( "ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic );
-					mi.Invoke( notifyIcon, null );
+					MethodInfo mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
+					mi.Invoke(notifyIcon, null);
 				}
-				catch( Exception ex )
+				catch(Exception ex)
 				{
-					Console.WriteLine( ex );
+					Console.WriteLine(ex);
 				}
 			};
 		}
 
-		protected override void OnLoad( EventArgs e )
+		protected override void OnLoad(EventArgs e)
 		{
 			MainForm.keyListener = this;
-			hookID = SetHook( hookCallback );
+			hookID = SetHook(hookCallback);
 			notifyIcon.Visible = true;
 			this.Visible = false;
 			this.ShowInTaskbar = false;
-			base.OnLoad( e );
+			base.OnLoad(e);
 		}
 
 		private void CloseApplication()
 		{
 			notifyIcon.Visible = false;
-			UnhookWindowsHookEx( hookID );
+			UnhookWindowsHookEx(hookID);
 			this.Close();
 		}
 
 		private void AddClipboardItem()
 		{
 			currentClipboardItem = GetClipboard();
-			listClipboardItem.Add( currentClipboardItem );
+			listClipboardItem.Add(currentClipboardItem);
 
 			//remove last item if list is greater than maximum size
-			if( listClipboardItem.Count > 10 )
-				listClipboardItem.RemoveAt( 0 );
+			if(listClipboardItem.Count > 10)
+				listClipboardItem.RemoveAt(0);
 
 			AutoClearFormatting();
 		}
 
 		private void AutoClearFormatting()
 		{
-			if( !clearItem.Checked )
+			if(!clearItem.Checked)
 				return;
 
 			var dataObject = Clipboard.GetDataObject();
-			Type format = typeof( string );
+			Type format = typeof(string);
 
-			if( !dataObject.GetDataPresent( format ) )
+			if(!dataObject.GetDataPresent(format))
 				return;
 
-			Clipboard.SetData( format.ToString(), dataObject.GetData( format ) );
+			Clipboard.SetData(format.ToString(), dataObject.GetData(format));
 		}
 
 		private ClipboardItem GetClipboard()
@@ -139,10 +139,10 @@ namespace ClipboardManagerCS
 			var dataObject = Clipboard.GetDataObject();
 			var formats = dataObject.GetFormats();
 
-			foreach( var format in formats )
+			foreach(var format in formats)
 			{
-				var data = dataObject.GetData( format );
-				clipboardItem.Objects.Add( format, data );
+				var data = dataObject.GetData(format);
+				clipboardItem.Objects.Add(format, data);
 			}
 
 			var menuItem = new ToolStripMenuItem();
@@ -150,39 +150,39 @@ namespace ClipboardManagerCS
 			menuItem.Tag = clipboardItem;
 			menuItem.Click += menuItemClickHandler;
 			menuItem.Text = DateTime.Now.ToString();
-			
+
 			//mark the current clipboard as checked
-			foreach( var ci in listClipboardItem )
+			foreach(var ci in listClipboardItem)
 				ci.MenuItem.Checked = false;
 
 			menuItem.Checked = true;
 
 			//determine clipboard content text
-			var text = (string)dataObject.GetData( "Text" );
+			var text = (string)dataObject.GetData("Text");
 
-			if( text == null )
+			if(text == null)
 			{
-				var data = ( string[] )dataObject.GetData( "FileName" );
-				text = string.Join( "\n", data );
+				var data = (string[])dataObject.GetData("FileName");
+				text = string.Join("\n", data);
 			}
 
-			menuItem.DropDown.Items.Add( text );
+			menuItem.DropDown.Items.Add(text);
 
 			return clipboardItem;
 		}
 
-		private void SetClipboard( ClipboardItem clipboardItem )
+		private void SetClipboard(ClipboardItem clipboardItem)
 		{
 			var dataObject = new DataObject();
 
-			foreach( var pair in clipboardItem.Objects )
-				dataObject.SetData( pair.Key, pair.Value );
+			foreach(var pair in clipboardItem.Objects)
+				dataObject.SetData(pair.Key, pair.Value);
 
-			Clipboard.SetDataObject( dataObject, true, 5, 100 );			
+			Clipboard.SetDataObject(dataObject, true, 5, 100);
 			AutoClearFormatting();
 
 			//uncheck all other items
-			foreach( var ci in listClipboardItem )
+			foreach(var ci in listClipboardItem)
 				ci.MenuItem.Checked = false;
 
 			//check current item
@@ -191,26 +191,26 @@ namespace ClipboardManagerCS
 			currentClipboardItem = clipboardItem;
 		}
 
-		private void menuItemClickHandler( Object sender, EventArgs args )
+		private void menuItemClickHandler(Object sender, EventArgs args)
 		{
-			var menuItem = ( ToolStripMenuItem )sender;
-			SetClipboard( ( ClipboardItem )menuItem.Tag );
+			var menuItem = (ToolStripMenuItem)sender;
+			SetClipboard((ClipboardItem)menuItem.Tag);
 		}
 
 		//get the item older than current item
 		public void BackClipboardItem()
 		{
 			//if there is no older item then do nothing
-			if( listClipboardItem.Count <= 1 )
+			if(listClipboardItem.Count <= 1)
 				return;
 
 			var backItem = currentClipboardItem;
 
 			//look from the oldest item in list
-			for( int i = 1; i < listClipboardItem.Count; i++ )
+			for(int i = 1; i < listClipboardItem.Count; i++)
 			{
-				if( listClipboardItem[ i ] == currentClipboardItem )
-					SetClipboard( listClipboardItem[ i - 1 ] );
+				if(listClipboardItem[i] == currentClipboardItem)
+					SetClipboard(listClipboardItem[i - 1]);
 			}
 		}
 
@@ -239,48 +239,48 @@ namespace ClipboardManagerCS
 		private static bool backToggleDown = false;
 		private static bool ignoreToggleDown = false;
 
-		private static IntPtr SetHook( LowLevelKeyboardProc proc )
+		private static IntPtr SetHook(LowLevelKeyboardProc proc)
 		{
-			using( Process curProcess = Process.GetCurrentProcess() )
-			using( ProcessModule curModule = curProcess.MainModule )
+			using(Process curProcess = Process.GetCurrentProcess())
+			using(ProcessModule curModule = curProcess.MainModule)
 			{
-				return SetWindowsHookEx( WH_KEYBOARD_LL, proc, GetModuleHandle( curModule.ModuleName ), 0 );
+				return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
 			}
 		}
 
-		private delegate IntPtr LowLevelKeyboardProc( int nCode, IntPtr wParam, IntPtr lParam );
+		private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
-		public static IntPtr HookCallback( int nCode, IntPtr wParam, IntPtr lParam )
+		public static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
 		{
-			int vkCode = Marshal.ReadInt32( lParam );
+			int vkCode = Marshal.ReadInt32(lParam);
 
-			if( nCode >= 0 )
+			if(nCode >= 0)
 			{
-				if( wParam == ( IntPtr )WM_KEYDOWN )
-					keyPressedDown[ vkCode ] = true;
+				if(wParam == (IntPtr)WM_KEYDOWN)
+					keyPressedDown[vkCode] = true;
 
-				if( wParam == ( IntPtr )WM_KEYUP )
-					keyPressedDown[ vkCode ] = false;
+				if(wParam == (IntPtr)WM_KEYUP)
+					keyPressedDown[vkCode] = false;
 			}
 
-			if( !copyToggleDown && keyPressedDown[ 162 ] && keyPressedDown[ 67 ] )
+			if(!copyToggleDown && keyPressedDown[162] && keyPressedDown[67])
 			{
 				//ctrl+c down
 				copyToggleDown = true;
 			}
-			else if( copyToggleDown && !keyPressedDown[ 162 ] && !keyPressedDown[ 67 ] )
+			else if(copyToggleDown && !keyPressedDown[162] && !keyPressedDown[67])
 			{
 				//ctrl+c up
 				copyToggleDown = false;
 				keyListener.AddClipboardItem();
 			}
 
-			if( !backToggleDown && keyPressedDown[ 162 ] && keyPressedDown[ 66 ] )
+			if(!backToggleDown && keyPressedDown[162] && keyPressedDown[66])
 			{
 				//ctrl+b down
 				backToggleDown = true;
 			}
-			else if( backToggleDown && !keyPressedDown[ 162 ] && !keyPressedDown[ 66 ] )
+			else if(backToggleDown && !keyPressedDown[162] && !keyPressedDown[66])
 			{
 				//ctrl+b up
 				backToggleDown = false;
@@ -299,21 +299,21 @@ namespace ClipboardManagerCS
 				keyListener.IgnoreClipboardItem();
 			}
 
-			return CallNextHookEx( hookID, nCode, wParam, lParam );
+			return CallNextHookEx(hookID, nCode, wParam, lParam);
 		}
 
-		[DllImport( "user32.dll", CharSet = CharSet.Auto, SetLastError = true )]
-		private static extern IntPtr SetWindowsHookEx( int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId );
+		[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
 
-		[DllImport( "user32.dll", CharSet = CharSet.Auto, SetLastError = true )]
-		[return: MarshalAs( UnmanagedType.Bool )]
-		private static extern bool UnhookWindowsHookEx( IntPtr hhk );
+		[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		private static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
-		[DllImport( "user32.dll", CharSet = CharSet.Auto, SetLastError = true )]
-		private static extern IntPtr CallNextHookEx( IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam );
+		[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
-		[DllImport( "kernel32.dll", CharSet = CharSet.Auto, SetLastError = true )]
-		private static extern IntPtr GetModuleHandle( string lpModuleName );
+		[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		private static extern IntPtr GetModuleHandle(string lpModuleName);
 	}
 
 	internal class ClipboardItem
