@@ -24,12 +24,13 @@ namespace ClipboardManagerCS
 
 	class MainForm : Form
 	{
-		private const string releaseVersion = "1.0.0.0";
+		private const string releaseVersion = "1.0.1.0";
 
 		private NotifyIcon notifyIcon;
 		private ContextMenuStrip contextMenuStrip;
 		private ToolStripMenuItem exitItem;
 		private ToolStripMenuItem clearItem;
+		private ToolStripMenuItem ignoreShiftDelItem;
 		private List<ClipboardItem> listClipboardItem;
 		private ClipboardItem currentClipboardItem;
 		
@@ -45,6 +46,14 @@ namespace ClipboardManagerCS
 			{
 				clearItem.Checked = !clearItem.Checked;
 				SetClipboard( currentClipboardItem );
+			};
+
+			ignoreShiftDelItem = new ToolStripMenuItem();
+			ignoreShiftDelItem.Text = "Ignore Shift+Del Clipboard Changes";
+			ignoreShiftDelItem.Checked = true;
+			ignoreShiftDelItem.Click += (o, e) =>
+			{
+				ignoreShiftDelItem.Checked = !ignoreShiftDelItem.Checked;
 			};
 
 			exitItem = new ToolStripMenuItem();
@@ -68,6 +77,7 @@ namespace ClipboardManagerCS
 
 					contextMenuStrip.Items.Add( "-" );
 					contextMenuStrip.Items.Add( clearItem );
+					contextMenuStrip.Items.Add(ignoreShiftDelItem);
 					contextMenuStrip.Items.Add( exitItem );
 
 					MethodInfo mi = typeof( NotifyIcon ).GetMethod( "ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic );
@@ -204,6 +214,19 @@ namespace ClipboardManagerCS
 			}
 		}
 
+		//ignore clipboard changes
+		public void IgnoreClipboardItem()
+		{
+			if(!ignoreShiftDelItem.Checked)
+				return;
+
+			//if there is no previous clipboard item then do nothing
+			if(currentClipboardItem == null)
+				return;
+
+			SetClipboard(currentClipboardItem);
+		}
+
 		private const int WH_KEYBOARD_LL = 13;
 		private const int WM_KEYDOWN = 0x0100;
 		private const int WM_KEYUP = 0x0101;
@@ -214,6 +237,7 @@ namespace ClipboardManagerCS
 		private static MainForm keyListener;
 		private static bool copyToggleDown = false;
 		private static bool backToggleDown = false;
+		private static bool ignoreToggleDown = false;
 
 		private static IntPtr SetHook( LowLevelKeyboardProc proc )
 		{
@@ -261,6 +285,18 @@ namespace ClipboardManagerCS
 				//ctrl+b up
 				backToggleDown = false;
 				keyListener.BackClipboardItem();
+			}
+
+			if(!ignoreToggleDown && keyPressedDown[160] && keyPressedDown[46])
+			{
+				//shift+delete down
+				ignoreToggleDown = true;
+			}
+			else if(ignoreToggleDown && !keyPressedDown[160] && !keyPressedDown[46])
+			{
+				//shift+delete up
+				ignoreToggleDown = false;
+				keyListener.IgnoreClipboardItem();
 			}
 
 			return CallNextHookEx( hookID, nCode, wParam, lParam );
