@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle( "MainForm" )]
-[assembly: AssemblyDescription( "" )]
+[assembly: AssemblyTitle("ClipboardManagerCS")]
+[assembly: AssemblyDescription("Manages the Windows Clipboard written in C#")]
 [assembly: AssemblyConfiguration( "" )]
-[assembly: AssemblyCompany( "Microsoft" )]
-[assembly: AssemblyProduct( "MainForm" )]
-[assembly: AssemblyCopyright( "Copyright © Microsoft 2011" )]
-[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCompany("ColacX")]
+[assembly: AssemblyProduct("ClipboardManagerCS")]
+[assembly: AssemblyCopyright("Free")]
+[assembly: AssemblyTrademark("None")]
 [assembly: AssemblyCulture( "" )]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
