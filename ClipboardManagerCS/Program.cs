@@ -24,12 +24,13 @@ namespace ClipboardManagerCS
 
 	class MainForm : Form
 	{
-		private const string releaseVersion = "1.0.1.0";
+		private const string releaseVersion = "1.0.1.1";
 
 		private NotifyIcon notifyIcon;
 		private ContextMenuStrip contextMenuStrip;
 		private ToolStripMenuItem exitItem;
 		private ToolStripMenuItem clearItem;
+		private ToolStripMenuItem convertSlashItem;
 		private ToolStripMenuItem ignoreShiftDelItem;
 		private List<ClipboardItem> listClipboardItem;
 		private ClipboardItem currentClipboardItem;
@@ -49,11 +50,21 @@ namespace ClipboardManagerCS
 			};
 
 			ignoreShiftDelItem = new ToolStripMenuItem();
-			ignoreShiftDelItem.Text = "Ignore Shift+Del Clipboard Changes";
+			ignoreShiftDelItem.Text = "Auto Ignore Shift+Del Clipboard Changes";
 			ignoreShiftDelItem.Checked = true;
 			ignoreShiftDelItem.Click += (o, e) =>
 			{
 				ignoreShiftDelItem.Checked = !ignoreShiftDelItem.Checked;
+			};
+
+			convertSlashItem = new ToolStripMenuItem();
+			convertSlashItem.Text = "Convert Backslashes To Slashes";
+			convertSlashItem.Checked = false;
+			convertSlashItem.Click += (o, e) =>
+			{
+				var clipboardItem = BackslashesToSlashes();
+				AddClipboardItem(clipboardItem);
+				SetClipboard(clipboardItem);
 			};
 
 			exitItem = new ToolStripMenuItem();
@@ -78,6 +89,7 @@ namespace ClipboardManagerCS
 					contextMenuStrip.Items.Add("-");
 					contextMenuStrip.Items.Add(clearItem);
 					contextMenuStrip.Items.Add(ignoreShiftDelItem);
+					contextMenuStrip.Items.Add(convertSlashItem);
 					contextMenuStrip.Items.Add(exitItem);
 
 					MethodInfo mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -107,9 +119,9 @@ namespace ClipboardManagerCS
 			this.Close();
 		}
 
-		private void AddClipboardItem()
+		private void AddClipboardItem(ClipboardItem clipboardItem)
 		{
-			currentClipboardItem = GetClipboard();
+			currentClipboardItem = clipboardItem;
 			listClipboardItem.Add(currentClipboardItem);
 
 			//remove last item if list is greater than maximum size
@@ -227,6 +239,37 @@ namespace ClipboardManagerCS
 			SetClipboard(currentClipboardItem);
 		}
 
+		public ClipboardItem BackslashesToSlashes()
+		{
+			var clipboardItem = new ClipboardItem();
+			var dataObject = Clipboard.GetDataObject();
+			var formats = dataObject.GetFormats();
+
+			var textData = (string)dataObject.GetData("Text");
+			textData = textData.Replace('\\', '/');
+			clipboardItem.Objects.Add("Text", textData);
+
+			var menuItem = new ToolStripMenuItem();
+			clipboardItem.MenuItem = menuItem;
+			menuItem.Tag = clipboardItem;
+			menuItem.Click += menuItemClickHandler;
+			menuItem.Text = DateTime.Now.ToString();
+
+			//mark the current clipboard as checked
+			foreach(var ci in listClipboardItem)
+				ci.MenuItem.Checked = false;
+
+			menuItem.Checked = true;
+
+			//determine clipboard content text
+			if(textData != null)
+			{
+				menuItem.DropDown.Items.Add(textData);
+			}
+
+			return clipboardItem;
+		}
+
 		private const int WH_KEYBOARD_LL = 13;
 		private const int WM_KEYDOWN = 0x0100;
 		private const int WM_KEYUP = 0x0101;
@@ -272,7 +315,7 @@ namespace ClipboardManagerCS
 			{
 				//ctrl+c up
 				copyToggleDown = false;
-				keyListener.AddClipboardItem();
+				keyListener.AddClipboardItem(keyListener.GetClipboard());
 			}
 
 			if(!backToggleDown && keyPressedDown[162] && keyPressedDown[66])
